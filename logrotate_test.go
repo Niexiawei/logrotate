@@ -2,6 +2,7 @@ package logrotate
 
 import (
 	"fmt"
+	"github.com/Niexiawei/logrotate/internal/ticker"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
@@ -13,7 +14,7 @@ import (
 func Test_SimpleWrite(t *testing.T) {
 	// no rotate
 	t.Run("no rotate", func(t *testing.T) {
-		rl, err := NewRoteteLog("./testdata/test.log.2006010215", WithCurLogLinkname("./testdata/test.log"))
+		rl, err := NewRotateLog("./testdata/test.log.2006010215", WithCurLogLinkname("./testdata/test.log"))
 		if assert.Empty(t, err) {
 			defer rl.Close()
 			rl.Write([]byte("hello, world!"))
@@ -24,7 +25,7 @@ func Test_SimpleWrite(t *testing.T) {
 	})
 	// no rotate, on link
 	t.Run("no rotate and link", func(t *testing.T) {
-		rl, err := NewRoteteLog("./testdata/test.log")
+		rl, err := NewRotateLog("./testdata/test.log")
 		if assert.Empty(t, err) {
 			defer rl.Close()
 			rl.Write([]byte("hello, world!"))
@@ -39,7 +40,7 @@ func Test_SimpleWrite(t *testing.T) {
 }
 
 func Test_Rotate(t *testing.T) {
-	rl, err := NewRoteteLog("./testdata/test.log.2006010215", WithRotateTime(time.Hour), WithCurLogLinkname("./testdata/test.log"))
+	rl, err := NewRotateLog("./testdata/test.log.2006010215", WithRotateTime(time.Hour), WithCurLogLinkname("./testdata/test.log"))
 	if assert.Empty(t, err) {
 		defer rl.Close()
 		rotate := make(chan time.Time, 1)
@@ -60,7 +61,7 @@ func Test_Rotate(t *testing.T) {
 }
 
 func Test_DeleteExpiredFile(t *testing.T) {
-	rl, err := NewRoteteLog("./testdata/test.log.2006010215", WithRotateTime(time.Hour), WithCurLogLinkname("./testdata/test.log"),
+	rl, err := NewRotateLog("./testdata/test.log.2006010215", WithRotateTime(time.Hour), WithCurLogLinkname("./testdata/test.log"),
 		WithDeleteExpiredFile(time.Second, "test.log*"))
 	if assert.Empty(t, err) {
 		defer rl.Close()
@@ -80,7 +81,7 @@ func Test_DeleteExpiredFile(t *testing.T) {
 
 func Test_Speed(t *testing.T) {
 	t.Skip()
-	rl, err := NewRoteteLog("./testdata/test.log", WithRotateTime(time.Hour))
+	rl, err := NewRotateLog("./testdata/test.log", WithRotateTime(time.Hour))
 	if assert.Empty(t, err) {
 		bg := time.Now()
 		for i := 0; i < 1000000; i++ {
@@ -97,4 +98,11 @@ func compareFileContent(t *testing.T, filename string, str string) {
 	if assert.Empty(t, err) {
 		assert.Equal(t, str, string(content))
 	}
+}
+
+func Test_afterTime(t *testing.T) {
+	now := time.Now()
+	t.Log(now.Format("2006-01-02 15:04:05"))
+	timeD := ticker.CalRotateTimeDuration(now, 24*time.Hour)
+	t.Log(timeD.Hours())
 }

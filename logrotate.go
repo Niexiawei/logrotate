@@ -1,7 +1,7 @@
 package logrotate
 
 import (
-	"github.com/Me1onRind/logrotate/internal/ticker"
+	"github.com/Niexiawei/logrotate/internal/ticker"
 	"os"
 	"path/filepath"
 	"sync"
@@ -12,25 +12,29 @@ type RotateLog struct {
 	file *os.File
 
 	logPath            string
-	curLogLinkpath     string
+	curLogLinkPath     string
 	rotateTime         time.Duration
 	maxAge             time.Duration
 	deleteFileWildcard string
-
-	mutex  *sync.Mutex
-	rotate <-chan time.Time // notify rotate event
-	close  chan struct{}    // close file and write goroutine
+	timeTicker         *time.Ticker
+	timeTickDate       TimeTickerDate
+	mutex              *sync.Mutex
+	rotate             <-chan time.Time // notify rotate event
+	close              chan struct{}    // close file and write goroutine
 }
 
-func NewRoteteLog(logPath string, opts ...Option) (*RotateLog, error) {
+func NewRotateLog(logPath string, opts ...Option) (*RotateLog, error) {
 	rl := &RotateLog{
-		mutex:   &sync.Mutex{},
-		close:   make(chan struct{}, 1),
-		logPath: logPath,
+		mutex:        &sync.Mutex{},
+		close:        make(chan struct{}, 1),
+		logPath:      logPath,
+		timeTickDate: TimeTickerDate{0, 0, 0},
 	}
 	for _, opt := range opts {
 		opt(rl)
 	}
+
+	rl.timeTicker = time.NewTicker(ticker.SetTime(rl.timeTickDate))
 
 	if err := os.Mkdir(filepath.Dir(rl.logPath), 0755); err != nil && !os.IsExist(err) {
 		return nil, err
@@ -66,7 +70,9 @@ func (r *RotateLog) handleEvent() {
 		case <-r.close:
 			return
 		case now := <-r.rotate:
-			r.rotateFile(now)
+			_ = r.rotateFile(now)
+		case <-r.timeTicker.C:
+			_ = r.rotateFile(time.Now())
 		}
 	}
 }
@@ -85,13 +91,13 @@ func (r *RotateLog) rotateFile(now time.Time) error {
 		return err
 	}
 	if r.file != nil {
-		r.file.Close()
+		_ = r.file.Close()
 	}
 	r.file = file
 
-	if len(r.curLogLinkpath) > 0 {
-		os.Remove(r.curLogLinkpath)
-		os.Link(latestLogPath, r.curLogLinkpath)
+	if len(r.curLogLinkPath) > 0 {
+		_ = os.Remove(r.curLogLinkPath)
+		_ = os.Link(latestLogPath, r.curLogLinkPath)
 	}
 
 	if r.maxAge > 0 && len(r.deleteFileWildcard) > 0 { // at present
@@ -108,7 +114,6 @@ func (r *RotateLog) deleteExpiredFile(now time.Time) {
 	if err != nil {
 		return
 	}
-
 	toUnlink := make([]string, 0, len(matches))
 	for _, path := range matches {
 		fileInfo, err := os.Stat(path)
@@ -120,14 +125,14 @@ func (r *RotateLog) deleteExpiredFile(now time.Time) {
 			continue
 		}
 
-		if len(r.curLogLinkpath) > 0 && fileInfo.Name() == filepath.Base(r.curLogLinkpath) {
+		if len(r.curLogLinkPath) > 0 && fileInfo.Name() == filepath.Base(r.curLogLinkPath) {
 			continue
 		}
 		toUnlink = append(toUnlink, path)
 	}
 
 	for _, path := range toUnlink {
-		os.Remove(path)
+		_ = os.Remove(path)
 	}
 }
 

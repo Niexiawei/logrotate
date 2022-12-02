@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type TimeTickerDate struct {
+	Hour int
+	Min  int
+	Sec  int
+}
+
 type Option func(*RotateLog)
 
 func WithRotateTime(duration time.Duration) Option {
@@ -14,18 +20,18 @@ func WithRotateTime(duration time.Duration) Option {
 	}
 }
 
-func WithCurLogLinkname(linkpath string) Option {
+func WithCurLogLinkname(linkPath string) Option {
 	return func(r *RotateLog) {
-		r.curLogLinkpath = linkpath
+		r.curLogLinkPath = linkPath
 	}
 }
 
 // Judege expired by laste modify time
 // cutoffTime = now - maxAge
 // Only delete satisfying file wildcard filename
-func WithDeleteExpiredFile(maxAge time.Duration, fileWilcard string) Option {
+func WithDeleteExpiredFile(maxAge time.Duration, fileWilCard string) Option {
 	return func(r *RotateLog) {
 		r.maxAge = maxAge
-		r.deleteFileWildcard = fmt.Sprintf("%s%s%s", filepath.Dir(r.logPath), string([]byte{filepath.Separator}), fileWilcard)
+		r.deleteFileWildcard = fmt.Sprintf("%s%s%s", filepath.Dir(r.logPath), string([]byte{filepath.Separator}), fileWilCard)
 	}
 }
