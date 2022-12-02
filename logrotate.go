@@ -17,7 +17,7 @@ type RotateLog struct {
 	maxAge             time.Duration
 	deleteFileWildcard string
 	timeTicker         *time.Ticker
-	timeTickDate       TimeTickerDate
+	timeTickDate       ticker.TimeTickerDate
 	mutex              *sync.Mutex
 	rotate             <-chan time.Time // notify rotate event
 	close              chan struct{}    // close file and write goroutine
@@ -28,7 +28,7 @@ func NewRotateLog(logPath string, opts ...Option) (*RotateLog, error) {
 		mutex:        &sync.Mutex{},
 		close:        make(chan struct{}, 1),
 		logPath:      logPath,
-		timeTickDate: TimeTickerDate{0, 0, 0},
+		timeTickDate: ticker.TimeTickerDate{},
 	}
 	for _, opt := range opts {
 		opt(rl)

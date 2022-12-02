@@ -6,12 +6,6 @@ import (
 	"time"
 )
 
-type TimeTickerDate struct {
-	Hour int
-	Min  int
-	Sec  int
-}
-
 type Option func(*RotateLog)
 
 func WithRotateTime(duration time.Duration) Option {
