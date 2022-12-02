@@ -9,8 +9,7 @@ import (
 )
 
 type RotateLog struct {
-	file *os.File
-
+	file               *os.File
 	logPath            string
 	curLogLinkPath     string
 	rotateTime         time.Duration

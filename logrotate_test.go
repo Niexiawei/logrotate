@@ -61,22 +61,24 @@ func Test_Rotate(t *testing.T) {
 }
 
 func Test_DeleteExpiredFile(t *testing.T) {
-	rl, err := NewRotateLog("./testdata/test.log.2006010215", WithRotateTime(time.Hour), WithCurLogLinkname("./testdata/test.log"),
+	rl, _ := NewRotateLog("./testdata/test.log.2006010215", WithRotateTime(time.Hour), WithCurLogLinkname("./testdata/test.log"),
 		WithDeleteExpiredFile(time.Second, "test.log*"))
-	if assert.Empty(t, err) {
-		defer rl.Close()
-		for i := 0; i < 10; i++ {
-			os.OpenFile(fmt.Sprintf("./testdata/test.log.%d", i), os.O_CREATE, 0644)
-		}
-		matches, _ := filepath.Glob("./testdata/test.log*")
-		assert.Equal(t, 12, len(matches))
-		time.Sleep(time.Millisecond * 1200)
-		rl.rotateFile(time.Now())
-		time.Sleep(time.Millisecond * 10)
-		matches, _ = filepath.Glob("./testdata/test.log*")
-		assert.Equal(t, 1, len(matches))
+
+	defer func() {
+		_ = rl.Close()
+	}()
+	for i := 0; i < 10; i++ {
+		file, _ := os.OpenFile(fmt.Sprintf("./testdata/test.log.%d", i), os.O_CREATE, 0644)
+		_ = file.Close()
 	}
-	os.RemoveAll("./testdata/")
+	matches, _ := filepath.Glob("./testdata/test.log*")
+	t.Log(matches)
+	time.Sleep(time.Millisecond * 1200)
+	rl.rotateFile(time.Now())
+	time.Sleep(time.Millisecond * 10)
+	matches, _ = filepath.Glob("./testdata/test.log*")
+	t.Log(matches)
+
 }
 
 func Test_Speed(t *testing.T) {
