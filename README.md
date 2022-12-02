@@ -1,5 +1,7 @@
 # logrotate
 
+fork https://github.com/Me1onRind/logrotate
+
 Learn from https://github.com/lestrrat-go/file-rotatelogs. But rotate driven by time.Timer so more fast.
 
 ## Example
@@ -9,13 +11,13 @@ package main
 
 import (
     "fmt"
-    "github.com/Me1onRind/logrotate"
+	"github.com/Niexiawei/logrotate"
     "time"
 )
 
 func main() {
     logPath := "./log/data.log.2006010215"
-    writer, err := logrotate.NewRoteteLog(
+    writer, err := logrotate.NewRotateLog(
         logPath,
         logrotate.WithRotateTime(time.Hour),
         logrotate.WithCurLogLinkname("./log/data.log"),
