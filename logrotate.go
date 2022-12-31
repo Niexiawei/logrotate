@@ -9,10 +9,11 @@ import (
 )
 
 type RotateLog struct {
-	file               *os.File
-	logPath            string
-	curLogLinkPath     string
-	rotateTime         time.Duration
+	file           *os.File
+	logPath        string
+	curLogLinkPath string
+	rotateTime     time.Duration
+
 	maxAge             time.Duration
 	deleteFileWildcard string
 	timeTicker         *time.Ticker
@@ -60,6 +61,7 @@ func (r *RotateLog) Write(b []byte) (int, error) {
 
 func (r *RotateLog) Close() error {
 	r.close <- struct{}{}
+	r.timeTicker.Stop()
 	return r.file.Close()
 }
 
